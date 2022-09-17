@@ -65,11 +65,42 @@ class AuthMethods {
       }
     } on FirebaseAuthException catch (err) {
       if (err.code == 'invalid-email') {
-        res ="Email is Badly Formated";
+        res = "Email is Badly Formated";
       }
     } catch (err) {
       res = err.toString();
     }
     return res;
+  }
+
+  // logging in user
+  Future<String> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    String res = "Some error Occurred";
+    try {
+      if (email.isNotEmpty || password.isNotEmpty) {
+        // logging in user with email and password
+        await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        res = "success";
+      } else {
+        res = "Please enter all the fields";
+      }
+    } on FirebaseAuthException catch (err) {
+      if (err.code == 'invalid-email') {
+        res = "Email is Badly Formated";
+      }
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
   }
 }
