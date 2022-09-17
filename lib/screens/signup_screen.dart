@@ -1,6 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:instagram_clone/resources/auth_methods.dart';
 import 'package:instagram_clone/utils/colors.dart';
+import 'package:instagram_clone/utils/utils.dart';
 
 import '../widgets/text_field_input.dart';
 
@@ -20,6 +25,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
       TextEditingController();
   final TextEditingController _userNameTextEditingController =
       TextEditingController();
+
+  Uint8List? _image;
+  bool _isLoading = false;
+
+  void selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+
+    setState(() {
+      _image = im;
+    });
+  }
+
+  void signUpUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthMethods().signupUser(
+      email: _emailTextEditingController.text,
+      password: _passwordTextEditingController.text,
+      username: _userNameTextEditingController.text,
+      bio: _bioTextEditingController.text,
+      file: _image!,
+    );
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (res != 'success') {
+      showSnackBar(context, res);
+    }
+    print(res);
+  }
 
   @override
   void dispose() {
@@ -56,16 +93,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               Stack(
                 children: [
-                  const CircleAvatar(
-                    radius: 64,
-                    backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1663267028525-3a70bcc64b8b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw3fHx8ZW58MHx8fHw%3D&auto=format&fit=crop&w=500&q=60'),
-                  ),
+                  _image != null
+                      ? CircleAvatar(
+                          radius: 64,
+                          backgroundImage: MemoryImage(_image!),
+                        )
+                      : const CircleAvatar(
+                          radius: 64,
+                          backgroundImage: NetworkImage(
+                              'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg'),
+                        ),
                   Positioned(
                       bottom: -10,
                       left: 80,
                       child: IconButton(
-                          onPressed: () {}, icon: const Icon(Icons.camera_alt)))
+                          onPressed: selectImage,
+                          icon: const Icon(Icons.camera_alt)))
                 ],
               ),
               const SizedBox(
@@ -103,14 +146,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
               TextFieldInput(
                 hintText: "Enter Your Bio",
                 textInputType: TextInputType.text,
-                textEditingController: _userNameTextEditingController,
+                textEditingController: _bioTextEditingController,
               ),
               const SizedBox(
                 height: 24,
               ),
               //button login
               InkWell(
-                onTap: () {},
+                onTap: signUpUser,
                 child: Container(
                   width: double.infinity,
                   alignment: Alignment.center,
@@ -121,7 +164,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     color: blueColor,
                   ),
-                  child: const Text("Log in"),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              backgroundColor: Colors.white),
+                        )
+                      : const Text("Sign Up"),
                 ),
               ),
               const SizedBox(

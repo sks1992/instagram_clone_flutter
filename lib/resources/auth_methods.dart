@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:instagram_clone/resources/storage_methods.dart';
 
 import '../utils/constants.dart';
 
@@ -33,6 +34,9 @@ class AuthMethods {
         );
         print(cred.user!.uid);
 
+        String photoUrl = await StorageMethods()
+            .uploadImageToStorage(USER_PROFILE_IMAGE, file, false);
+
         //add user to database
         await _firestore
             .collection(USER_COLLECTION_NAME)
@@ -44,8 +48,24 @@ class AuthMethods {
           'bio': bio,
           'followers': [],
           'following': [],
+          'photoUrl': photoUrl,
         });
+
+        //anotherWay
+        // await _firestore.collection(USER_COLLECTION_NAME).add({
+        //   'username': username,
+        //   'uid': cred.user!.uid,
+        //   'email': email,
+        //   'bio': bio,
+        //   'followers': [],
+        //   'following': [],
+        // });
+
         res = "success";
+      }
+    } on FirebaseAuthException catch (err) {
+      if (err.code == 'invalid-email') {
+        res ="Email is Badly Formated";
       }
     } catch (err) {
       res = err.toString();
